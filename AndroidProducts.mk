@@ -12,7 +12,7 @@ COMMON_LUNCH_CHOICES := \
     twrp_z3q-eng
 
 PRODUCT_MAKEFILES += \
-    $(LOCAL_DIR)/fox_z3q.mk
+    $(LOCAL_DIR)/omni_z3q.mk
 
 COMMON_LUNCH_CHOICES += \
-    fox_z3q-eng
+    omni_z3q-eng
