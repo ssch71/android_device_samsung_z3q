@@ -1,0 +1,87 @@
+name: Build Recovery (z3q)
+
+on:
+  workflow_dispatch:
+    inputs:
+      RECOVERY:
+        description: 'TWRP or OrangeFox'
+        required: true
+        default: 'twrp'
+        type: choice
+        options:
+          - twrp
+          - fox
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y bc bison build-essential ccache curl \
+            flex g++-multilib gcc-multilib git gnupg gperf imagemagick \
+            lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool \
+            libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils \
+            lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3
+
+      - name: Install repo tool
+        run: |
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Set manifest
+        id: manifest
+        run: |
+          if [ "${{ github.event.inputs.RECOVERY }}" == "twrp" ]; then
+            echo "url=https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git" >> $GITHUB_OUTPUT
+            echo "branch=twrp-12.1" >> $GITHUB_OUTPUT
+            echo "lunch=twrp_z3q-eng" >> $GITHUB_OUTPUT
+          else
+            echo "url=https://gitlab.com/OrangeFox/sync.git" >> $GITHUB_OUTPUT
+            echo "branch=fox_12.1" >> $GITHUB_OUTPUT
+            echo "lunch=fox_z3q-eng" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Repo sync
+        run: |
+          mkdir workspace && cd workspace
+          repo init -u ${{ steps.manifest.outputs.url }} -b ${{ steps.manifest.outputs.branch }}
+          repo sync -j$(nproc --all) --force-sync --no-clone-bundle
+
+      - name: Clone device tree
+        run: |
+          git clone https://github.com/ssch71/android_device_samsung_z3q.git \
+            workspace/device/samsung/z3q -b twrp_12.1
+
+      - name: Build
+        run: |
+          cd workspace
+          source build/envsetup.sh
+          lunch ${{ steps.manifest.outputs.lunch }}
+          mka recoveryimage -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovery-z3q-${{ github.event.inputs.RECOVERY }}
+          path: |
+            workspace/out/target/product/z3q/recovery.img
+            workspace/out/target/product/z3q/*.zip
+          retention-days: 7
