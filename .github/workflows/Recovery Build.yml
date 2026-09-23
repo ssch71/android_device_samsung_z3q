@@ -81,6 +81,22 @@ jobs:
           fi
           ls vendor/twrp/config/common.mk
 
+      - name: Ensure vendor/orangefox exists
+        if: github.event.inputs.RECOVERY == 'fox'
+        run: |
+          cd workspace
+          ls -la vendor/ 2>&1 || echo "vendor dir missing entirely"
+          if [ ! -f vendor/orangefox/config/common.mk ]; then
+            echo "vendor/orangefox/config/common.mk NOT FOUND"
+            echo "--- searching for common.mk under orangefox/fox paths ---"
+            find . -iname "common.mk" -path "*orangefox*" 2>/dev/null
+            find . -iname "common.mk" -path "*fox*" 2>/dev/null
+            echo "--- listing vendor/ contents ---"
+            ls -la vendor/ 2>/dev/null
+            exit 1
+          fi
+          echo "vendor/orangefox OK"
+
       - name: Clone device tree
         run: |
           git clone https://github.com/ssch71/android_device_samsung_z3q.git \
