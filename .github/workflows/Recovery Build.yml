@@ -81,21 +81,16 @@ jobs:
           fi
           ls vendor/twrp/config/common.mk
 
-      - name: Ensure vendor/orangefox exists
+      - name: Inspect vendor dirs (fox debug)
         if: github.event.inputs.RECOVERY == 'fox'
         run: |
           cd workspace
-          ls -la vendor/ 2>&1 || echo "vendor dir missing entirely"
-          if [ ! -f vendor/orangefox/config/common.mk ]; then
-            echo "vendor/orangefox/config/common.mk NOT FOUND"
-            echo "--- searching for common.mk under orangefox/fox paths ---"
-            find . -iname "common.mk" -path "*orangefox*" 2>/dev/null
-            find . -iname "common.mk" -path "*fox*" 2>/dev/null
-            echo "--- listing vendor/ contents ---"
-            ls -la vendor/ 2>/dev/null
-            exit 1
-          fi
-          echo "vendor/orangefox OK"
+          echo "--- vendor/recovery ---"
+          find vendor/recovery -maxdepth 3
+          echo "--- vendor/twrp ---"
+          find vendor/twrp -maxdepth 2
+          echo "--- searching all common.mk anywhere under vendor ---"
+          find vendor -iname "common.mk"
 
       - name: Clone device tree
         run: |
