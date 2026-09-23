@@ -46,24 +46,29 @@ jobs:
           chmod a+x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
 
-      - name: Set manifest
+      - name: Set lunch target
         id: manifest
         run: |
           if [ "${{ github.event.inputs.RECOVERY }}" == "twrp" ]; then
-            echo "url=https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git" >> $GITHUB_OUTPUT
-            echo "branch=twrp-12.1" >> $GITHUB_OUTPUT
             echo "lunch=twrp_z3q-eng" >> $GITHUB_OUTPUT
           else
-            echo "url=https://gitlab.com/OrangeFox/sync.git" >> $GITHUB_OUTPUT
-            echo "branch=fox_12.1" >> $GITHUB_OUTPUT
             echo "lunch=fox_z3q-eng" >> $GITHUB_OUTPUT
           fi
 
-      - name: Repo sync
+      - name: Repo sync (TWRP)
+        if: github.event.inputs.RECOVERY == 'twrp'
         run: |
-          mkdir workspace && cd workspace
-          repo init -u ${{ steps.manifest.outputs.url }} -b ${{ steps.manifest.outputs.branch }}
+          mkdir -p workspace && cd workspace
+          repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
           repo sync -j$(nproc --all) --force-sync --no-clone-bundle
+
+      - name: Repo sync (OrangeFox)
+        if: github.event.inputs.RECOVERY == 'fox'
+        run: |
+          git clone https://gitlab.com/OrangeFox/sync.git ~/OrangeFox_sync
+          cd ~/OrangeFox_sync
+          chmod +x orangefox_sync.sh
+          ./orangefox_sync.sh --branch 12.1 --path ${{ github.workspace }}/workspace
 
       - name: Clone device tree
         run: |
