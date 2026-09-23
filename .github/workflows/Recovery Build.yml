@@ -70,6 +70,17 @@ jobs:
           chmod +x orangefox_sync.sh
           ./orangefox_sync.sh --branch 12.1 --path ${{ github.workspace }}/workspace
 
+      - name: Ensure vendor/twrp exists
+        if: github.event.inputs.RECOVERY == 'twrp'
+        run: |
+          cd workspace
+          if [ ! -f vendor/twrp/config/common.mk ]; then
+            echo "vendor/twrp missing, cloning manually..."
+            rm -rf vendor/twrp
+            git clone https://github.com/TeamWin/android_vendor_twrp.git vendor/twrp
+          fi
+          ls vendor/twrp/config/common.mk
+
       - name: Clone device tree
         run: |
           git clone https://github.com/ssch71/android_device_samsung_z3q.git \
