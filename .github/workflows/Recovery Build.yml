@@ -52,7 +52,7 @@ jobs:
           if [ "${{ github.event.inputs.RECOVERY }}" == "twrp" ]; then
             echo "lunch=twrp_z3q-eng" >> $GITHUB_OUTPUT
           else
-            echo "lunch=fox_z3q-eng" >> $GITHUB_OUTPUT
+            echo "lunch=omni_z3q-eng" >> $GITHUB_OUTPUT
           fi
 
       - name: Repo sync (TWRP)
