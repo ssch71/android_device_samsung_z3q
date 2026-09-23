@@ -44,6 +44,13 @@ on post-fs-data
 
 on boot
     start health-hal-2-1
+    write /sys/class/power_supply/usb/otg_vbus_enable 1
+    write /sys/class/qcom-battery/usb_otg_mode 1
+    write /sys/bus/platform/devices/a600000.dwc3/mode host
+
+on property:sys.usb.config=none
+    write /sys/class/power_supply/usb/otg_vbus_enable 1
+    write /sys/class/qcom-battery/usb_otg_mode 1
 
 on property:crypto.ready=1
     start keymaster-sb-4-0
