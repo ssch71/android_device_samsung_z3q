@@ -79,6 +79,11 @@ jobs:
         run: |
           cd workspace
           source build/envsetup.sh
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export LC_ALL=C
+          if [ "${{ github.event.inputs.RECOVERY }}" == "fox" ]; then
+            export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
+          fi
           lunch ${{ steps.manifest.outputs.lunch }}
           mka recoveryimage -j$(nproc)
 
